@@ -5,12 +5,23 @@ LinuxShell::LinuxShell()
 {
     char path[MAX_BUF];
     getcwd(path, MAX_BUF);
-    std::stringstream sstream(std::string(path));
+    std::string pathString = std::string(path);
+    std::stringstream sstream(pathString);
     std::string token;
-    while(std::getline(sstream, token))
+    while(std::getline(sstream, token, '/'))
     {
-        std::cout << "shit";
+        m_path.push_back(token);
     } 
+}
+
+std::string LinuxShell::Prompt()
+{
+    std::string input;
+
+    std::cout << "Shell:" << VectorToString(m_path) << "$ ";
+    std::cin >> input;
+
+    return input;
 }
 
 int LinuxShell::Run()
@@ -18,6 +29,14 @@ int LinuxShell::Run()
     bool done = false;
     while(!done)
     {
-        
+        std::string input = Prompt();
+        std::cout << input << "\n";
+
+        //BIG IF TIME
+        if(input == "cd")
+        {
+            
+        }
     }
+    return 0;
 }

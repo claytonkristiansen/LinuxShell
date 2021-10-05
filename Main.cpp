@@ -3,6 +3,7 @@
 
 int main(int argc, char** argv)
 {
-    LinuxShell linshell();
+    LinuxShell linshell;
+    linshell.Run();
     return 0;
 }

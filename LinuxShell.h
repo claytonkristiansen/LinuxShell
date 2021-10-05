@@ -15,16 +15,33 @@ class LinuxShell
 {
     std::vector<std::string> m_path;
 
+
+    std::string VectorToString(std::vector<std::string> vec)
+    {
+        std::stringstream ss("");
+        for(std::string s : vec)
+        {
+            ss << "/" << s;
+        }
+        return ss.str();
+    }
+
+    std::vector<std::string> ParseArgs(std::string input)
+    {
+        std::vector<std::string> vec;
+        for(char c : input)
+        {
+            
+        }
+    } 
+
 public:
 
     LinuxShell(); 
 
     int Run();
 
-    std::string Prompt()
-    {
-        std::cout << "";
-    }
+    std::string Prompt();
 };
 
 

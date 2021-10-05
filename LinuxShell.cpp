@@ -35,7 +35,7 @@ int LinuxShell::Run()
         //BIG IF TIME
         if(input == "cd")
         {
-            
+            chdir()
         }
     }
     return 0;

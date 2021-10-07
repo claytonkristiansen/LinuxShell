@@ -120,8 +120,9 @@ class LinuxShell
         {
             if(argList[i] == "<")
             {
-                std::string file = argList[i + 1]; 
-                int fd = open(file.c_str(), O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+                std::string file = argList[i + 1];
+                std::cout << "Redirecting input"; 
+                int fd = open(file.c_str(), O_RDONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
                 dup2(fd, 0);
                 argList.Remove(i);
                 argList.Remove(i + 1);
@@ -138,6 +139,7 @@ class LinuxShell
             if(argList[i] == ">")
             {
                 std::string file = argList[i + 1]; 
+                std::cout << "Redirecting output";
                 int fd = open(file.c_str(), O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
                 dup2(fd, 1);
                 argList.Remove(i);

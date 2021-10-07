@@ -1,0 +1,25 @@
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.0  0.0   9788   512 ?        Ssl  Oct05   0:00 /init
+root         7  0.0  0.0   9796   288 tty1     Ss   Oct05   0:00 /init
+clayton      8  0.0  0.0  18216  3776 tty1     S    Oct05   0:00 -bash
+root      6429  0.0  0.0   9796   296 tty2     Ss   12:49   0:00 /init
+clayton   6430  0.0  0.0  10656   684 tty2     S    12:49   0:00 sh -c "$VSCODE_WSL_EXT_LOCATION/scripts/wslServer.sh" 7f6ab5485bbc00838
+clayton   6431  0.0  0.0  10656   748 tty2     S    12:49   0:00 sh /mnt/c/Users/Clayt/.vscode/extensions/ms-vscode-remote.remote-wsl-0.
+clayton   6437  0.0  0.0  10656   716 tty2     S    12:49   0:00 sh /home/clayton/.vscode-server/bin/7f6ab5485bbc008386c4386d08766667e15
+clayton   6439  1.9  0.4 941832 70548 tty2     Sl   12:49   0:30 /home/clayton/.vscode-server/bin/7f6ab5485bbc008386c4386d08766667e15524
+clayton   6450  0.3  0.1 906852 30536 tty2     Sl   12:49   0:05 /home/clayton/.vscode-server/bin/7f6ab5485bbc008386c4386d08766667e15524
+clayton   6485  0.0  0.1 888224 24932 tty2     Sl   12:49   0:00 /home/clayton/.vscode-server/bin/7f6ab5485bbc008386c4386d08766667e15524
+clayton   6528  2.6  1.0 1054644 176652 tty2   Sl   12:49   0:39 /home/clayton/.vscode-server/bin/7f6ab5485bbc008386c4386d08766667e15524
+clayton   6554  0.0  0.0  18048  3496 pts/0    Ss   12:49   0:00 /usr/bin/bash
+clayton   6578  0.6  0.3 1753192 63396 tty2    Sl   12:50   0:09 /home/clayton/.vscode-server/extensions/ms-vscode.cpptools-1.6.0/bin/cp
+clayton   6718  0.0  0.0  18048  3508 pts/1    Ss   12:50   0:00 /usr/bin/bash
+clayton   6872  0.0  0.0  16208  1284 ?        S    12:51   0:00 grep /init
+clayton   6905  0.4  0.6 5259120 101872 tty2   Sl   12:51   0:06 /home/clayton/.vscode-server/extensions/ms-vscode.cpptools-1.6.0/bin/cp
+clayton   7695  0.8  0.4 5259120 71292 tty2    Sl   12:59   0:07 /home/clayton/.vscode-server/extensions/ms-vscode.cpptools-1.6.0/bin/cp
+clayton   9607  4.5  0.2 3590148 47500 tty2    Sl   13:14   0:01 /home/clayton/.vscode-server/extensions/ms-vscode.cpptools-1.6.0/debugA
+clayton   9621  0.1  0.0  10656   736 pts/1    S    13:14   0:00 /bin/sh /tmp/Microsoft-MIEngine-Cmd-zhuy5se0.wdl
+clayton   9623  1.8  0.3  81104 51192 pts/1    S    13:14   0:00 /usr/bin/gdb --interpreter=mi --tty=/dev/pts/1
+clayton   9649  0.1  0.0  13976  1664 ?        Ss   13:14   0:00 /mnt/c/Users/Clayt/repos/LinuxShell/Main
+clayton   9746  0.0  0.0  18664  1900 ?        R    13:14   0:00 ps aux
+clayton   9749  0.0  0.0  10656   696 tty2     S    13:14   0:00 /bin/sh -c /usr/bin/ps -ax -o pid=,ppid=,pcpu=,pmem=,command=
+clayton   9750  0.0  0.0   8656    96 tty2     R    13:14   0:00 /usr/bin/ps -ax -o pid=,ppid=,pcpu=,pmem=,command=

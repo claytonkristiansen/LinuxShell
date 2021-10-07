@@ -108,6 +108,8 @@ class LinuxShell
         }
     }
 
+    //bool HasInputRedirection()
+
     ArgList<std::string> ParseArgs(std::string input);
 
     std::vector<char**> SplitOnPipe(ArgList<std::string> argList);

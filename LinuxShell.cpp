@@ -128,20 +128,11 @@ ArgList<std::string> LinuxShell::ParseArgs(std::string input)
         }
         else if(input[i] == ' ')
         {
-            if(ss.str() == "&")
-            {
-                argList.doInBackground = true;
-            }
-            else if(ss.str() == "|")
-            {
-                argList.piping = true;
-                argList.push_back(ss.str());
-            }
-            else
+            if(ss.str().size() > 0)
             {
                 argList.push_back(ss.str());   
+                ss.str("");
             }
-            ss.str("");
         }
         else
         {
@@ -257,7 +248,7 @@ int LinuxShell::Run()
                 }
             }
         }
-        else
+        else            //with piping
         {
             int savedIn = dup(0);
             int savedOut = dup(1);
@@ -270,7 +261,7 @@ int LinuxShell::Run()
                 if(!pid)
                 {
                     char** command = splitList[i];
-                    //std::cout << "running " << command[0] << "\n";
+                    //if()
                     if(i < splitList.size() - 1)
                     {
                         dup2(fds[1], 1);

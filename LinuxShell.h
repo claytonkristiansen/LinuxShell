@@ -19,6 +19,11 @@ class ArgList : public std::list<T>
 {
 public:
     bool doInBackground = false;
+    bool piping = false;
+    bool iRedirection = false;
+    bool oRedirection = false;
+    std::string iRedirectionFile;
+    std::string oRedirectionFile;
 };
 
 class LinuxShell
@@ -33,10 +38,10 @@ class LinuxShell
         for(pid_t pid : m_backgroundProcesses)
         {
             int status;
-            waitpid(pid, &status, WNOHANG);
-            if(WIFEXITED(status))
+            if(waitpid(pid, &status, WNOHANG))
             {
                 indicesToRemove.push_back(index);
+                //std::cout << "Killed " << pid << "\n";
             }
             ++index;
         }
@@ -70,6 +75,31 @@ class LinuxShell
         return pathVec;
     }
 
+    char* StringToChar(std::string s)
+    {
+        char* arg = new char[s.size()];
+        for(int i = 0; i < s.size(); ++i)
+        {
+            arg[i] = s[i];
+        }
+        return arg;
+    } 
+
+    char** ListToCharArr(std::list<std::string> v)
+    {
+        char** args = new char*[v.size() + 1];
+
+        int index = 0;
+        for(std::string s : v)
+        {
+            char* arg = StringToChar(s);
+            args[index] = arg;
+            ++index;
+        }
+        args[index] = NULL;
+        return args;
+    }
+
     void MergeVectors(std::vector<std::string> &v1, std::vector<std::string> &v2)
     {
         for(std::string s : v2)
@@ -79,6 +109,8 @@ class LinuxShell
     }
 
     ArgList<std::string> ParseArgs(std::string input);
+
+    std::vector<char**> SplitOnPipe(ArgList<std::string> argList);
 
 public:
 

@@ -7,15 +7,45 @@
 #include <list>
 #include <unistd.h>
 #include <sstream>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #ifndef MAX_BUF
 #define MAX_BUF 200
 #endif
 
+template<typename T>
+class ArgList : public std::list<T>
+{
+public:
+    bool doInBackground = false;
+};
+
 class LinuxShell
 {
     std::vector<std::string> m_path;
+    std::vector<pid_t> m_backgroundProcesses;
 
+    void BackgroundCheck()
+    {
+        int index = 0;
+        std::vector<int> indicesToRemove;
+        for(pid_t pid : m_backgroundProcesses)
+        {
+            int status;
+            waitpid(pid, &status, WNOHANG);
+            if(WIFEXITED(status))
+            {
+                indicesToRemove.push_back(index);
+            }
+            ++index;
+        }
+        for(int i : indicesToRemove)
+        {
+            m_backgroundProcesses[index] = m_backgroundProcesses.back();
+            m_backgroundProcesses.pop_back();
+        }
+    }
 
     std::string VectorToString(std::vector<std::string> vec)
     {
@@ -47,56 +77,25 @@ class LinuxShell
             v1.push_back(s);
         }
     }
-    
 
-    std::list<std::string> ParseArgs(std::string input)
-    {
-        std::list<std::string> argList;
-        std::stringstream ss("");
-        bool inQuote = false;
-        for(char c : input)
-        {
-            if(inQuote)
-            {
-                if(c == '"' || c == '\'')
-                {
-                    argList.push_back(ss.str());
-                    ss.str("");
-                }
-                else
-                {
-                    ss << c;
-                }
-            }
-            else if(c == '"' || c == '\'')
-            {
-                inQuote = true;
-            }
-            else if(c == ' ')
-            {
-                argList.push_back(ss.str());
-                ss.str("");
-            }
-            else
-            {
-                ss << c;
-            }
-        }
-        if(ss.str().length() > 0)
-        {
-            argList.push_back(ss.str());
-        }
-        return argList;
-    } 
+    ArgList<std::string> ParseArgs(std::string input);
 
 public:
 
     LinuxShell(); 
 
+    ~LinuxShell()
+    {
+        for(pid_t pid : m_backgroundProcesses)
+        {
+            int status;
+            waitpid(pid, &status, 0);
+        }
+    }
+
     int Run();
 
     std::string Prompt();
 };
-
 
 #endif

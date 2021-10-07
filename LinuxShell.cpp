@@ -34,14 +34,26 @@ std::string LinuxShell::Prompt()
     return input;
 }
 
-ArgList<std::string> LinuxShell::ParseArgs(std::string input)
+ArgList LinuxShell::ParseArgs(std::string input)
 {
-    ArgList<std::string> argList;
+    ArgList argList;
     std::stringstream ss("");
     bool inQuote = false;
     for(int i = 0; i < input.size(); ++i)
     {
-        if(input[i] == '&')
+        if(inQuote)
+        {
+            if(input[i] == '"' || input[i] == '\'')
+            {
+                argList.push_back(ss.str());   
+                ss.str("");
+            }
+            else
+            {
+                ss << input[i];
+            }
+        }
+        else if(input[i] == '&')
         {
             argList.doInBackground = true;
             if(ss.str().size() > 0)
@@ -62,65 +74,21 @@ ArgList<std::string> LinuxShell::ParseArgs(std::string input)
         }
         else if(input[i] == '>')
         {
-            argList.oRedirection = true;
             if(ss.str().size() > 0)
             {
                 argList.push_back(ss.str());   
                 ss.str("");
             }
-            int quoteCount = 0;
-            ++i;
-            while(quoteCount < 2)
-            {
-                if(input[i] != '"')
-                {
-                    ss << input [i];
-                }
-                else
-                {
-                    ++quoteCount;
-                }
-                ++i;
-            }
-            argList.oRedirectionFile = ss.str();
-            ss.str("");
+            argList.push_back(">");
         }
         else if(input[i] == '<')
         {
-            argList.iRedirection = true;
             if(ss.str().size() > 0)
             {
                 argList.push_back(ss.str());   
                 ss.str("");
             }
-            int quoteCount = 0;
-            ++i;
-            while(quoteCount < 2)
-            {
-                if(input[i] != '"')
-                {
-                    ss << input [i];
-                }
-                else
-                {
-                    ++quoteCount;
-                }
-                ++i;
-            }
-            argList.iRedirectionFile = ss.str();
-            ss.str("");
-        }
-        else if(inQuote)
-        {
-            if(input[i] == '"' || input[i] == '\'')
-            {
-                argList.push_back(ss.str());   
-                ss.str("");
-            }
-            else
-            {
-                ss << input[i];
-            }
+            argList.push_back("<");
         }
         else if(input[i] == '"' || input[i] == '\'')
         {
@@ -141,33 +109,21 @@ ArgList<std::string> LinuxShell::ParseArgs(std::string input)
     }
     if(ss.str().length() > 0)
     {
-        if(ss.str() == "&")
-        {
-            argList.doInBackground = true;
-        }
-        else if(ss.str() == "|")
-        {
-            argList.piping = true;
-            argList.push_back(ss.str());
-        }
-        else
-        {
-            argList.push_back(ss.str());   
-        }
+        argList.push_back(ss.str());   
     }
     return argList;
 } 
 
-std::vector<char**> LinuxShell::SplitOnPipe(ArgList<std::string> argList)
+std::vector<ArgList> LinuxShell::SplitOnPipe(ArgList argList)
 {
-    std::vector<char**> splitList;
-    ArgList<std::string> list;
+    std::vector<ArgList> splitList;
+    ArgList list;
     for(std::string s : argList)
     {
         if(s == "|")
         {
-            splitList.push_back(ListToCharArr(list));
-            list = ArgList<std::string>();
+            splitList.push_back(list);
+            list = ArgList();
         }
         else
         {
@@ -176,7 +132,7 @@ std::vector<char**> LinuxShell::SplitOnPipe(ArgList<std::string> argList)
     }
     if(list.size() > 0)
     {
-        splitList.push_back(ListToCharArr(list));
+        splitList.push_back(list);
     }
     return splitList;
 }
@@ -187,34 +143,33 @@ int LinuxShell::Run()
     
     while(!done)
     {
+        int savedIn = dup(0);
+        int savedOut = dup(1);
         std::string input = Prompt();
         
 
-        ArgList<std::string> argList = ParseArgs(input);
+        ArgList argList = ParseArgs(input);
         char** charList = ListToCharArr(argList);
         //BIG IF TIME
-        if(argList.front() == "cd")
+        if(argList[0] == "cd")
         {
-            argList.pop_front();
-            if(argList.front() == "..")
+            if(argList[1] == "..")
             {
                 m_path.pop_back();
                 chdir(VectorToString(m_path).c_str());
             }
             else
             {
-                std::vector<std::string> pathVec = PathStringToVector(argList.front());
+                std::vector<std::string> pathVec = PathStringToVector(argList[1]);
                 if(pathVec.front() == m_path.front())
                 {
                     m_path = pathVec;
-                    chdir(argList.front().c_str());
-                    argList.pop_front();
+                    chdir(argList[1].c_str());
                 }
                 else
                 {
                     MergeVectors(m_path, pathVec);
-                    chdir(argList.front().c_str());
-                    argList.pop_front();
+                    chdir(argList[1].c_str());
                 }
             }
         }
@@ -229,6 +184,9 @@ int LinuxShell::Run()
             pid_t id = fork();
             if(!id)                         //Are the child, and must execute the command
             {
+                InputRedirection(argList);
+                OutputRedirection(argList);
+                char** charList = ListToCharArr(argList);
                 execvp(charList[0], charList);
             }
             else                            //Are the parent, and must take care of the child now
@@ -250,9 +208,7 @@ int LinuxShell::Run()
         }
         else            //with piping
         {
-            int savedIn = dup(0);
-            int savedOut = dup(1);
-            std::vector<char**> splitList = SplitOnPipe(argList);
+            std::vector<ArgList> splitList = SplitOnPipe(argList);
             for(int i = 0; i < splitList.size(); ++i)
             {
                 int fds[2];
@@ -260,64 +216,31 @@ int LinuxShell::Run()
                 pid_t pid = fork();
                 if(!pid)
                 {
-                    char** command = splitList[i];
-                    //if()
+                    if(i == 0)
+                    {
+                        InputRedirection(splitList[i]);
+                    }
                     if(i < splitList.size() - 1)
                     {
                         dup2(fds[1], 1);
                     }
+                    else
+                    {
+                        OutputRedirection(splitList[i]);
+                    }
+                    char** command = ListToCharArr(splitList[i]);
                     execvp(command[0], command);
                 }
                 else
                 {
                     waitpid(pid, NULL, 0);
-                    if(i != 0)
-                    {          
-                        
-                    }
                     dup2(fds[0], 0);
                     close(fds[1]);
                 }
             }
-
-            dup2(savedIn, 0);       //Restoring stdin
-            dup2(savedOut, 1);      //Restoring stdout
-
-            // if(!fork())
-            // {
-            //     std::vector<char**> splitList = SplitOnPipe(argList);
-            //     pid_t id = 0;
-            //     int i = 0;
-            //     int fds[2];
-            //     for(; id == 0 && i < splitList.size() - 1; ++i)
-            //     {
-            //         std::cout << "splitting\n";
-            //         pipe(fds);
-            //         id = fork();
-            //     }
-            //     if(id) {--i;}
-            //     wait(NULL);
-            //     if(i)
-            //     {
-            //         std::cout << "redirect stdout\n";
-            //         dup2(fds[1], 1);        //redirect stdout
-            //     }
-            //     if(id)
-            //     {
-            //         std::cout << "redirect stdin\n";
-            //         dup2(fds[0], 0);        //redirect stdin
-            //         close(fds[1]);
-            //     }
-            //     char** command = splitList[splitList.size() - i - 1];
-            //     std::cout << "running " << command[0] << "\n";
-            //     execvp(command[0], command);
-            // }
-            // else
-            // {
-            //     wait(NULL);
-            // }
-
         }
+        dup2(savedIn, 0);       //Restoring stdin
+        dup2(savedOut, 1);      //Restoring stdout
         BackgroundCheck();
     }
     return 0;

@@ -9,21 +9,27 @@
 #include <sstream>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 
 #ifndef MAX_BUF
 #define MAX_BUF 200
 #endif
 
-template<typename T>
-class ArgList : public std::list<T>
+class ArgList : public std::vector<std::string>
 {
 public:
     bool doInBackground = false;
     bool piping = false;
-    bool iRedirection = false;
-    bool oRedirection = false;
-    std::string iRedirectionFile;
-    std::string oRedirectionFile;
+    void Remove(int index)
+    {
+        for(int i = index; i < this->size() - 1; ++i)
+        {
+            this->at(i) = this->at(i + 1);
+        }
+        this->pop_back();
+    }
 };
 
 class LinuxShell
@@ -85,7 +91,7 @@ class LinuxShell
         return arg;
     } 
 
-    char** ListToCharArr(std::list<std::string> v)
+    char** ListToCharArr(ArgList v)
     {
         char** args = new char*[v.size() + 1];
 
@@ -108,11 +114,43 @@ class LinuxShell
         }
     }
 
-    //bool HasInputRedirection()
+    bool InputRedirection(ArgList &argList)
+    {
+        for(int i = 0; i < argList.size(); ++i)
+        {
+            if(argList[i] == "<")
+            {
+                std::string file = argList[i + 1]; 
+                int fd = open(file.c_str(), O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+                dup2(fd, 0);
+                argList.Remove(i);
+                argList.Remove(i + 1);
+                return true;
+            }
+        }
+        return false;
+    }
 
-    ArgList<std::string> ParseArgs(std::string input);
+    bool OutputRedirection(ArgList &argList)
+    {
+        for(int i = 0; i < argList.size(); ++i)
+        {
+            if(argList[i] == ">")
+            {
+                std::string file = argList[i + 1]; 
+                int fd = open(file.c_str(), O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+                dup2(fd, 1);
+                argList.Remove(i);
+                argList.Remove(i + 1);
+                return true;
+            }
+        }
+        return false;
+    }
 
-    std::vector<char**> SplitOnPipe(ArgList<std::string> argList);
+    ArgList ParseArgs(std::string input);
+
+    std::vector<ArgList> SplitOnPipe(ArgList argList);
 
 public:
 

@@ -83,11 +83,14 @@ class LinuxShell
 
     char* StringToChar(std::string s)
     {
-        char* arg = new char[s.size()];
-        for(int i = 0; i < s.size(); ++i)
+        int size = s.size();
+        char* arg = new char[size + 1];
+        int i = 0;
+        for(; i < s.size(); ++i)
         {
             arg[i] = s[i];
         }
+        arg[i] = '\0';
         return arg;
     } 
 
@@ -121,11 +124,11 @@ class LinuxShell
             if(argList[i] == "<")
             {
                 std::string file = argList[i + 1];
-                std::cout << "Redirecting input"; 
+                std::cout << "Redirecting input\n"; 
                 int fd = open(file.c_str(), O_RDONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
                 dup2(fd, 0);
                 argList.Remove(i);
-                argList.Remove(i + 1);
+                argList.Remove(i);
                 return true;
             }
         }
@@ -139,11 +142,11 @@ class LinuxShell
             if(argList[i] == ">")
             {
                 std::string file = argList[i + 1]; 
-                std::cout << "Redirecting output";
+                std::cout << "Redirecting output\n";
                 int fd = open(file.c_str(), O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
                 dup2(fd, 1);
                 argList.Remove(i);
-                argList.Remove(i + 1);
+                argList.Remove(i);
                 return true;
             }
         }

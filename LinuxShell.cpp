@@ -47,6 +47,7 @@ ArgList LinuxShell::ParseArgs(std::string input)
             {
                 argList.push_back(ss.str());   
                 ss.str("");
+                inQuote = false;
             }
             else
             {
@@ -150,6 +151,10 @@ int LinuxShell::Run()
 
         ArgList argList = ParseArgs(input);
         char** charList = ListToCharArr(argList);
+
+        // InputRedirection(argList);
+        // OutputRedirection(argList);
+
         //BIG IF TIME
         if(argList[0] == "cd")
         {
@@ -187,7 +192,9 @@ int LinuxShell::Run()
                 InputRedirection(argList);
                 OutputRedirection(argList);
                 char** charList = ListToCharArr(argList);
+                //std::cout << "Running " << charList[2] << " " << charList[1] << " " << charList[2] << "\n";
                 execvp(charList[0], charList);
+                //std::cout << "Ran " << charList[0] << "\n";
             }
             else                            //Are the parent, and must take care of the child now
             {
@@ -233,7 +240,10 @@ int LinuxShell::Run()
                 }
                 else
                 {
-                    waitpid(pid, NULL, 0);
+                    if(i == splitList.size() - 1)
+                    {
+                        waitpid(pid, NULL, 0);
+                    }
                     dup2(fds[0], 0);
                     close(fds[1]);
                 }

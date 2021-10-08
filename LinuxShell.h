@@ -36,6 +36,8 @@ class LinuxShell
 {
     std::vector<std::string> m_path;
     std::vector<pid_t> m_backgroundProcesses;
+    std::vector<std::string> m_homePath;
+    std::vector<std::string> m_lastDir;
 
     void BackgroundCheck()
     {
@@ -124,7 +126,7 @@ class LinuxShell
             if(argList[i] == "<")
             {
                 std::string file = argList[i + 1];
-                std::cout << "Redirecting input\n"; 
+                //std::cout << "Redirecting input\n"; 
                 int fd = open(file.c_str(), O_RDONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
                 dup2(fd, 0);
                 argList.Remove(i);
@@ -142,7 +144,7 @@ class LinuxShell
             if(argList[i] == ">")
             {
                 std::string file = argList[i + 1]; 
-                std::cout << "Redirecting output\n";
+                //std::cout << "Redirecting output\n";
                 int fd = open(file.c_str(), O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
                 dup2(fd, 1);
                 argList.Remove(i);

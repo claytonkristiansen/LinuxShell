@@ -21,7 +21,11 @@ LinuxShell::LinuxShell()
     while(std::getline(sstream, token, '/'))
     {
         m_path.push_back(token);
-    } 
+        if(token == "home")
+        {
+            m_homePath = m_path;
+        }
+    }
 }
 
 std::string LinuxShell::Prompt()
@@ -158,15 +162,41 @@ int LinuxShell::Run()
         //BIG IF TIME
         if(argList[0] == "cd")
         {
-            if(argList[1] == "..")
+            if(argList[1] == ".")
             {
+                m_lastDir = m_path;
+                //Do nothing
+            }
+            else if(argList[1] == "..")
+            {
+                m_lastDir = m_path;
                 m_path.pop_back();
+                chdir(VectorToString(m_path).c_str());
+            }
+            else if(argList[1] == "../../")
+            {
+                m_lastDir = m_path;
+                m_path.pop_back();
+                m_path.pop_back();
+                chdir(VectorToString(m_path).c_str());
+            }
+            else if(argList[1] == "/home/")
+            {
+                m_lastDir = m_path;
+                m_path = m_homePath;
+                chdir(VectorToString(m_path).c_str());
+            }
+            else if(argList[1] == "-")
+            {
+                std::vector<std::string> tempDir = m_path;
+                m_path = m_lastDir;
+                m_lastDir = tempDir;
                 chdir(VectorToString(m_path).c_str());
             }
             else
             {
                 std::vector<std::string> pathVec = PathStringToVector(argList[1]);
-                if(pathVec.front() == m_path.front())
+                if(pathVec[0] == m_path[0])
                 {
                     m_path = pathVec;
                     chdir(argList[1].c_str());
@@ -178,7 +208,7 @@ int LinuxShell::Run()
                 }
             }
         }
-        else if(argList.front() == "pwd")
+        else if(argList[0] == "pwd")
         {
             char path[MAX_BUF];
             getcwd(path, MAX_BUF);

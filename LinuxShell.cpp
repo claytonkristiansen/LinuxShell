@@ -31,8 +31,12 @@ LinuxShell::LinuxShell()
 std::string LinuxShell::Prompt()
 {
     std::string input;
-
-    std::cout << "\n" << "Shell:" << VectorToString(m_path) << "$ ";
+    char* username = getlogin();
+    time_t rawtime;
+    time(&rawtime);
+    std::string str(asctime(localtime(&rawtime)));
+    str.pop_back();
+    std::cout << "\n" << username << "[" << str << "]" << VectorToString(m_path) << "$ ";
     std::getline(std::cin, input);
 
     return input;

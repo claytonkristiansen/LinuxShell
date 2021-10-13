@@ -15,9 +15,10 @@
 
 
 #ifndef MAX_BUF
-#define MAX_BUF 200
+#define MAX_BUF 200     //Maximum buffer for certain system calls
 #endif
 
+//Custom argument list class
 class ArgList : public std::vector<std::string>
 {
 public:
@@ -33,149 +34,57 @@ public:
     }
 };
 
+//Linux shell class
 class LinuxShell
 {
-    std::vector<std::string> m_path;
-    std::vector<pid_t> m_backgroundProcesses;
-    std::vector<std::string> m_homePath;
-    std::vector<std::string> m_lastDir;
+    std::vector<std::string> m_path;            //Current directory tracker
+    std::vector<pid_t> m_backgroundProcesses;   //Active background processes tracker
+    std::vector<char**> m_allocatedDoubleCharPointers;  //Contains all allocated char**
+    std::vector<std::string> m_homePath;        //Path to /home/
+    std::vector<std::string> m_lastDir;         //Path of last visited directory for cd -
 
-    void BackgroundCheck()
-    {
-        int index = 0;
-        std::vector<int> indicesToRemove;
-        for(pid_t pid : m_backgroundProcesses)
-        {
-            int status;
-            if(waitpid(pid, &status, WNOHANG))
-            {
-                indicesToRemove.push_back(index);
-                //std::cout << "Killed " << pid << "\n";
-            }
-            ++index;
-        }
-        for(int i : indicesToRemove)
-        {
-            m_backgroundProcesses[index] = m_backgroundProcesses.back();
-            m_backgroundProcesses.pop_back();
-        }
-    }
+    //Attempts to reap all currently running background processes
+    void BackgroundCheck();
 
-    std::string VectorToString(std::vector<std::string> vec)
-    {
-        std::stringstream ss("");
-        //ss << "/";
-        for(std::string s : vec)
-        {
-            ss << s << "/" ;
-        }
-        return ss.str();
-    }
+    //Converts a vector of strings to a single string
+    std::string VectorToString(std::vector<std::string> vec);
 
-    std::vector<std::string> PathStringToVector(std::string pathString)
-    {
-        std::vector<std::string> pathVec;
-        std::stringstream sstream(pathString);
-        std::string token;
-        while(std::getline(sstream, token, '/'))
-        {
-            pathVec.push_back(token);
-        } 
-        return pathVec;
-    }
+    //Parses path string into vector of directory names
+    std::vector<std::string> PathStringToVector(std::string pathString);
 
-    char* StringToChar(std::string s)
-    {
-        int size = s.size();
-        char* arg = new char[size + 1];
-        int i = 0;
-        for(; i < s.size(); ++i)
-        {
-            arg[i] = s[i];
-        }
-        arg[i] = '\0';
-        return arg;
-    } 
+    //Converts a string to a char*
+    char* StringToChar(std::string s);
 
-    char** ListToCharArr(ArgList v)
-    {
-        char** args = new char*[v.size() + 1];
+    //Converts an ArgList object to a char**
+    char** ListToCharArr(ArgList v);
 
-        int index = 0;
-        for(std::string s : v)
-        {
-            char* arg = StringToChar(s);
-            args[index] = arg;
-            ++index;
-        }
-        args[index] = NULL;
-        return args;
-    }
+    //Merges two string vectors
+    void MergeVectors(std::vector<std::string> &v1, std::vector<std::string> &v2);
 
-    void MergeVectors(std::vector<std::string> &v1, std::vector<std::string> &v2)
-    {
-        for(std::string s : v2)
-        {
-            v1.push_back(s);
-        }
-    }
+    //Sets up input redirection
+    bool InputRedirection(ArgList &argList);
 
-    bool InputRedirection(ArgList &argList)
-    {
-        for(int i = 0; i < argList.size(); ++i)
-        {
-            if(argList[i] == "<")
-            {
-                std::string file = argList[i + 1];
-                //std::cout << "Redirecting input\n"; 
-                int fd = open(file.c_str(), O_RDONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-                dup2(fd, 0);
-                argList.Remove(i);
-                argList.Remove(i);
-                return true;
-            }
-        }
-        return false;
-    }
+    //Sets up output redirection
+    bool OutputRedirection(ArgList &argList);
 
-    bool OutputRedirection(ArgList &argList)
-    {
-        for(int i = 0; i < argList.size(); ++i)
-        {
-            if(argList[i] == ">")
-            {
-                std::string file = argList[i + 1]; 
-                //std::cout << "Redirecting output\n";
-                int fd = open(file.c_str(), O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-                dup2(fd, 1);
-                argList.Remove(i);
-                argList.Remove(i);
-                return true;
-            }
-        }
-        return false;
-    }
-
+    //Parses arguments into an ArgList object, additional comments unnecessary if person reading this can code well
     ArgList ParseArgs(std::string input);
 
+    //Splits a string along | characters
     std::vector<ArgList> SplitOnPipe(ArgList argList);
 
 public:
-
+    //LinuxShell constructor
     LinuxShell(); 
+    
+    //LinusShell destructor
+    ~LinuxShell();
 
-    ~LinuxShell()
-    {
-        for(pid_t pid : m_backgroundProcesses)
-        {
-            int status;
-            waitpid(pid, &status, 0);
-        }
-    }
-
-    int Run();
-
+    //Prints the prompt to the console and waits for input
     std::string Prompt();
+
+    //Runs main loop
+    int Run();
 };
 
 #endif
